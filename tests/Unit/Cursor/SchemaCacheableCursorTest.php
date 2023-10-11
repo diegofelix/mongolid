@@ -17,13 +17,16 @@ class SchemaCacheableCursorTest extends TestCase
     public function tearDown(): void
     {
         parent::tearDown();
+
         m::close();
     }
 
-    public function testShouldGetCursorFromPreviousIteration()
+    public function testShouldGetCursorFromPreviousIteration(): void
     {
         // Arrange
-        $documentsFromDb = new ArrayIterator([['name' => 'joe'], ['name' => 'doe']]);
+        $documentsFromDb = new ArrayIterator(
+            [['name' => 'joe'], ['name' => 'doe']]
+        );
         $cursor = $this->getCachableCursor();
         $this->setProtected(
             $cursor,
@@ -38,7 +41,7 @@ class SchemaCacheableCursorTest extends TestCase
         );
     }
 
-    public function testShouldGetCursorFromCache()
+    public function testShouldGetCursorFromCache(): void
     {
         // Arrange
         $documentsFromCache = [['name' => 'joe'], ['name' => 'doe']];
@@ -63,7 +66,7 @@ class SchemaCacheableCursorTest extends TestCase
         );
     }
 
-    public function testShouldGetFromDatabaseWhenCacheFails()
+    public function testShouldGetFromDatabaseWhenCacheFails(): void
     {
         // Arrange
         $documentsFromDb = [['name' => 'joe'], ['name' => 'doe']];
@@ -107,7 +110,7 @@ class SchemaCacheableCursorTest extends TestCase
         );
     }
 
-    public function testShouldGetCursorFromDatabaseAndCacheForLater()
+    public function testShouldGetCursorFromDatabaseAndCacheForLater(): void
     {
         // Arrange
         $documentsFromDb = [['name' => 'joe'], ['name' => 'doe']];
@@ -146,7 +149,7 @@ class SchemaCacheableCursorTest extends TestCase
         );
     }
 
-    public function testShouldGetOriginalCursorFromDatabaseAfterTheDocumentLimit()
+    public function testShouldGetOriginalCursorFromDatabaseAfterTheDocumentLimit(): void
     {
         // Arrange
         $documentsFromDb = [['name' => 'joe'], ['name' => 'doe']];
@@ -177,7 +180,10 @@ class SchemaCacheableCursorTest extends TestCase
             ->never();
 
         $rawCollection->shouldReceive('find')
-            ->with([], ['skip' => SchemaCacheableCursor::DOCUMENT_LIMIT, 'limit' => 49])
+            ->with(
+                [],
+                ['skip' => SchemaCacheableCursor::DOCUMENT_LIMIT, 'limit' => 49]
+            )
             ->andReturn(new ArrayIterator($documentsFromDb));
 
         $cacheComponent->shouldReceive('put')
@@ -190,10 +196,15 @@ class SchemaCacheableCursorTest extends TestCase
         );
     }
 
-    public function testShouldGenerateUniqueCacheKey()
+    public function testShouldGenerateUniqueCacheKey(): void
     {
         // Arrange
-        $cursor = $this->getCachableCursor(null, null, 'find', [['color' => 'red']]);
+        $cursor = $this->getCachableCursor(
+            null,
+            null,
+            'find',
+            [['color' => 'red']]
+        );
 
         // Act
         $cursor->shouldReceive('generateCacheKey')
@@ -222,7 +233,7 @@ class SchemaCacheableCursorTest extends TestCase
         $driverCursor = null
     ) {
         if (!$entitySchema) {
-            $entitySchema = m::mock(Schema::class.'[]');
+            $entitySchema = m::mock(Schema::class . '[]');
         }
 
         if (!$collection) {
@@ -234,7 +245,7 @@ class SchemaCacheableCursorTest extends TestCase
         }
 
         $mock = m::mock(
-            SchemaCacheableCursor::class.'[generateCacheKey]',
+            SchemaCacheableCursor::class . '[generateCacheKey]',
             [$entitySchema, $collection, $command, $params]
         );
         $mock->shouldAllowMockingProtectedMethods();

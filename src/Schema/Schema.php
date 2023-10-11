@@ -5,7 +5,6 @@ namespace Mongolid\Schema;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use Mongolid\Container\Container;
-use Mongolid\Container\Ioc;
 use Mongolid\Util\ObjectIdUtils;
 use Mongolid\Util\SequenceService;
 
@@ -21,17 +20,15 @@ abstract class Schema
      * does not have a strict document format or if you want to take full
      * advantage of the "schemaless" nature of MongoDB.
      *
-     * @var bool
      */
-    public $dynamic = false;
+    public bool $dynamic = false;
 
     /**
      * Name of the collection where this kind of document is going to be saved
      * or retrieved from.
      *
-     * @var string
      */
-    public $collection = null;
+    public string $collection;
 
     /**
      * Tells how a document should look like. If an scalar type is used, it will
@@ -43,7 +40,7 @@ abstract class Schema
      *
      * @var string[]
      */
-    public $fields = [
+    public array $fields = [
         '_id' => 'objectId', // Means that the _id will pass trough the `objectId` method
         'created_at' => 'createdAtTimestamp', // Generates an automatic timestamp
         'updated_at' => 'updatedAtTimestamp',
@@ -53,9 +50,8 @@ abstract class Schema
      * Name of the class that will be used to represent a document of this
      * Schema when retrieve from the database.
      *
-     * @var string
      */
-    public $entityClass = 'stdClass';
+    public string $entityClass = 'stdClass';
 
     /**
      * Filters any field in the $fields that has it's value specified as a
@@ -65,14 +61,14 @@ abstract class Schema
      *
      * @return ObjectId|mixed
      */
-    public function objectId($value = null)
+    public function objectId(mixed $value = null)
     {
         if (null === $value) {
             return new ObjectId();
         }
 
         if (is_string($value) && ObjectIdUtils::isObjectId($value)) {
-            $value = new ObjectId($value);
+            return new ObjectId($value);
         }
 
         return $value;
@@ -87,7 +83,7 @@ abstract class Schema
      *
      * @return int
      */
-    public function sequence(int $value = null)
+    public function sequence(?int $value = null)
     {
         if ($value) {
             return $value;

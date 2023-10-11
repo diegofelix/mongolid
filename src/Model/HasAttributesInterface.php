@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model;
 
 /**
@@ -45,7 +46,7 @@ interface HasAttributesInterface
      * @param string $key   name of the attribute to be set
      * @param mixed  $value value to be set
      */
-    public function setDocumentAttribute(string $key, $value);
+    public function setDocumentAttribute(string $key, mixed $value);
 
     /**
      * Stores original attributes from actual data from attributes

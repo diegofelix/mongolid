@@ -11,10 +11,11 @@ class DynamicSchemaTest extends TestCase
     public function tearDown(): void
     {
         parent::tearDown();
+
         m::close();
     }
 
-    public function testShouldExtendSchema()
+    public function testShouldExtendSchema(): void
     {
         // Arrange
         $schema = new DynamicSchema();
@@ -23,7 +24,7 @@ class DynamicSchemaTest extends TestCase
         $this->assertInstanceOf(Schema::class, $schema);
     }
 
-    public function testShouldBeDynamic()
+    public function testShouldBeDynamic(): void
     {
         // Arrange
         $schema = new DynamicSchema();

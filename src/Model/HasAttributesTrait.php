@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model;
 
 use Exception;
@@ -25,7 +26,7 @@ trait HasAttributesTrait
      *
      * @var array
      */
-    protected $fillable = [];
+    protected array $fillable = [];
 
     /**
      * The attributes that are not mass assignable. The opposite
@@ -33,76 +34,36 @@ trait HasAttributesTrait
      *
      * @var array
      */
-    protected $guarded = [];
+    protected array $guarded = [];
 
     /**
      * Check if model should mutate attributes checking
      * the existence of a specific method on model
      * class. Default is false.
      *
-     * @var bool
      */
-    protected $mutable = false;
+    protected bool $mutable = false;
 
     /**
      * Store mutable attribute values to work with `&__get()`.
      *
      * @var array
      */
-    protected $mutableCache = [];
+    protected array $mutableCache = [];
 
     /**
      * The model's attributes.
      *
      * @var array
      */
-    private $attributes = [];
+    private array $attributes = [];
 
     /**
      * The model attribute's original state.
      *
      * @var array
      */
-    private $originalAttributes = [];
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function fill(
-        array $input,
-        HasAttributesInterface $object = null,
-        bool $force = false
-    ): HasAttributesInterface {
-        if (!$object) {
-            $object = Container::make(static::class);
-        }
-
-        if ($object instanceof PolymorphableModelInterface) {
-            $class = $object->polymorph(array_merge($object->getDocumentAttributes(), $input));
-
-            if ($class !== get_class($object)) {
-                $originalAttributes = $object->getDocumentAttributes();
-                $object = new $class();
-
-                foreach ($originalAttributes as $key => $value) {
-                    $object->setDocumentAttribute($key, $value);
-                }
-            }
-        }
-
-        foreach ($input as $key => $value) {
-            if ($force
-                || ((!$object->fillable || in_array($key, $object->fillable)) && !in_array($key, $object->guarded))) {
-                if ($value instanceof stdClass) {
-                    $value = json_decode(json_encode($value), true); // cast to array
-                }
-
-                $object->setDocumentAttribute($key, $value);
-            }
-        }
-
-        return $object;
-    }
+    private array $originalAttributes = [];
 
     /**
      * {@inheritdoc}
@@ -118,7 +79,10 @@ trait HasAttributesTrait
     public function &getDocumentAttribute(string $key)
     {
         if ($this->mutable && $this->hasMutatorMethod($key, 'get')) {
-            $this->mutableCache[$key] = $this->{$this->buildMutatorMethod($key, 'get')}();
+            $this->mutableCache[$key] = $this->{$this->buildMutatorMethod(
+                $key,
+                'get'
+            )}();
 
             return $this->mutableCache[$key];
         }
@@ -153,7 +117,7 @@ trait HasAttributesTrait
     /**
      * {@inheritdoc}
      */
-    public function cleanDocumentAttribute(string $key)
+    public function cleanDocumentAttribute(string $key): void
     {
         unset($this->attributes[$key]);
 
@@ -165,7 +129,7 @@ trait HasAttributesTrait
     /**
      * {@inheritdoc}
      */
-    public function setDocumentAttribute(string $key, $value)
+    public function setDocumentAttribute(string $key, $value): void
     {
         if ($this->mutable && $this->hasMutatorMethod($key, 'set')) {
             $value = $this->{$this->buildMutatorMethod($key, 'set')}($value);
@@ -187,11 +151,13 @@ trait HasAttributesTrait
     /**
      * {@inheritdoc}
      */
-    public function syncOriginalDocumentAttributes()
+    public function syncOriginalDocumentAttributes(): void
     {
         try {
-            $this->originalAttributes = unserialize(serialize($this->getDocumentAttributes()));
-        } catch (Exception $e) {
+            $this->originalAttributes = unserialize(
+                serialize($this->getDocumentAttributes())
+            );
+        } catch (Exception) {
             $this->originalAttributes = $this->getDocumentAttributes();
         }
     }
@@ -210,6 +176,60 @@ trait HasAttributesTrait
     public function toArray(): array
     {
         return $this->getDocumentAttributes();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function fill(
+        array $input,
+        ?HasAttributesInterface $object = null,
+        bool $force = false
+    ): HasAttributesInterface {
+        if (!$object) {
+            $object = Container::make(static::class);
+        }
+
+        if ($object instanceof PolymorphableModelInterface) {
+            $class = $object->polymorph(
+                array_merge($object->getDocumentAttributes(), $input)
+            );
+
+            if ($class !== $object::class) {
+                $originalAttributes = $object->getDocumentAttributes();
+                $object = new $class();
+
+                foreach ($originalAttributes as $key => $value) {
+                    $object->setDocumentAttribute($key, $value);
+                }
+            }
+        }
+
+        foreach ($input as $key => $value) {
+            if (
+                $force
+                || ((!$object->fillable || in_array(
+                    $key,
+                    $object->fillable
+                )) && !in_array(
+                    $key,
+                    $object->guarded
+                ))
+            ) {
+                if ($value instanceof stdClass) {
+                    $value = json_decode(
+                        json_encode($value, JSON_THROW_ON_ERROR),
+                        true,
+                        512,
+                        JSON_THROW_ON_ERROR
+                    ); // cast to array
+                }
+
+                $object->setDocumentAttribute($key, $value);
+            }
+        }
+
+        return $object;
     }
 
     /**
@@ -233,6 +253,6 @@ trait HasAttributesTrait
      */
     protected function buildMutatorMethod(string $key, string $prefix): string
     {
-        return $prefix.Str::studly($key).'DocumentAttribute';
+        return $prefix . Str::studly($key) . 'DocumentAttribute';
     }
 }

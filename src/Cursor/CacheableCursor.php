@@ -17,45 +17,30 @@ use Mongolid\Util\CacheComponentInterface;
 class CacheableCursor extends Cursor
 {
     /**
+     * Limits the amount of documents that will be cached for performance reasons.
+     */
+    public const DOCUMENT_LIMIT = 100;
+
+    /**
      * The documents that were retrieved from the database in a serializable way.
      *
      * @var array
      */
-    protected $documents;
+    protected array $documents;
 
     /**
      * Limit of the query. It is stored because when caching the documents
      * the DOCUMENT_LIMIT const will be used.
      *
-     * @var int
      */
-    protected $originalLimit;
+    protected int $originalLimit;
 
     /**
      * Means that the CacheableCursor is wapping the original cursor and not
      * reading from Cache anymore.
      *
-     * @var bool
      */
-    protected $ignoreCache = false;
-
-    /**
-     * Limits the amount of documents that will be cached for performance reasons.
-     */
-    const DOCUMENT_LIMIT = 100;
-
-    /**
-     * Serializes this object. Drops the unserializable DriverCursor. In order
-     * to make the CacheableCursor object serializable.
-     *
-     * @return string serialized object
-     */
-    public function __serialize(): array
-    {
-        $this->documents = $this->cursor = null;
-
-        return parent::__serialize();
-    }
+    protected bool $ignoreCache = false;
 
     /**
      * Actually returns a Traversable object with the DriverCursor within.
@@ -69,10 +54,12 @@ class CacheableCursor extends Cursor
     protected function getCursor(): Iterator
     {
         // Returns original (non-cached) cursor
-        if ($this->ignoreCache || $this->position >= self::DOCUMENT_LIMIT) {
+        if ($this->ignoreCache) {
             return $this->getOriginalCursor();
         }
-
+        if ($this->position >= self::DOCUMENT_LIMIT) {
+            return $this->getOriginalCursor();
+        }
         // Returns cached set of documents
         if ($this->documents) {
             return $this->documents;
@@ -84,7 +71,7 @@ class CacheableCursor extends Cursor
 
         try {
             $cachedDocuments = $cacheComponent->get($cacheKey, null);
-        } catch (ErrorException $error) {
+        } catch (ErrorException) {
             $cachedDocuments = [];
         }
 
@@ -170,5 +157,18 @@ class CacheableCursor extends Cursor
         $this->ignoreCache = true;
 
         return $this->getOriginalCursor();
+    }
+
+    /**
+     * Serializes this object. Drops the unserializable DriverCursor. In order
+     * to make the CacheableCursor object serializable.
+     *
+     * @return string serialized object
+     */
+    public function __serialize(): array
+    {
+        $this->documents = $this->cursor = null;
+
+        return parent::__serialize();
     }
 }

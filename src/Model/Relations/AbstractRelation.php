@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model\Relations;
 
 use MongoDB\BSON\ObjectId;
@@ -6,44 +7,15 @@ use Mongolid\Model\ModelInterface;
 
 abstract class AbstractRelation implements RelationInterface
 {
-    /**
-     * @var ModelInterface
-     */
-    protected $parent;
-
-    /**
-     * @var string
-     */
-    protected $model;
-
-    /**
-     * @var string
-     */
-    protected $field;
-
-    /**
-     * @var bool
-     */
-    protected $pristine = false;
+    protected bool $pristine = false;
 
     /**
      * Cached results.
      *
-     * @var mixed
      */
-    protected $results;
+    protected mixed $results;
 
-    /**
-     * @var string
-     */
-    protected $key = '_id';
-
-    public function __construct(ModelInterface $parent, string $model, string $field)
-    {
-        $this->parent = $parent;
-        $this->model = $model;
-        $this->field = $field;
-    }
+    protected string $key = '_id';
 
     /**
      * Retrieve Relation Results.
@@ -51,6 +23,10 @@ abstract class AbstractRelation implements RelationInterface
      * @return mixed
      */
     abstract public function get();
+
+    public function __construct(protected ModelInterface $parent, protected string $model, protected string $field)
+    {
+    }
 
     /**
      * Retrieve cached Relation Results.

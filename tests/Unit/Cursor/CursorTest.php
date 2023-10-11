@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Cursor;
 
 use ArrayIterator;
@@ -80,11 +81,17 @@ final class CursorTest extends TestCase
 
         // Actions
         $cursor->setReadPreference($mode);
-        $readPreferenceParameter = $this->getProtected($cursor, 'params')[1]['readPreference'];
+        $readPreferenceParameter = $this->getProtected(
+            $cursor,
+            'params'
+        )[1]['readPreference'];
         $result = $readPreferenceParameter->getMode();
 
         // Assertions
-        $this->assertInstanceOf(ReadPreference::class, $readPreferenceParameter);
+        $this->assertInstanceOf(
+            ReadPreference::class,
+            $readPreferenceParameter
+        );
         $this->assertSame($mode, $result);
     }
 
@@ -97,12 +104,21 @@ final class CursorTest extends TestCase
         // Actions
         $cursor->setReadPreference($mode);
         $cursor->disableTimeout();
-        $readPreferenceParameter = $this->getProtected($cursor, 'params')[1]['readPreference'];
+        $readPreferenceParameter = $this->getProtected(
+            $cursor,
+            'params'
+        )[1]['readPreference'];
         $result = $readPreferenceParameter->getMode();
-        $timeoutResult = $this->getProtected($cursor, 'params')[1]['noCursorTimeout'];
+        $timeoutResult = $this->getProtected(
+            $cursor,
+            'params'
+        )[1]['noCursorTimeout'];
 
         // Assertions
-        $this->assertInstanceOf(ReadPreference::class, $readPreferenceParameter);
+        $this->assertInstanceOf(
+            ReadPreference::class,
+            $readPreferenceParameter
+        );
         $this->assertSame($mode, $result);
         $this->assertTrue($timeoutResult);
     }
@@ -178,9 +194,12 @@ final class CursorTest extends TestCase
         $driverCursor->expects()
             ->rewind()
             ->andReturnUsing(
-                function () use ($cursor) {
+                function () use ($cursor): void {
                     if ($this->getProtected($cursor, 'cursor')) {
-                        throw new LogicException('Cursor already initialized', 1);
+                        throw new LogicException(
+                            'Cursor already initialized',
+                            1
+                        );
                     }
                 }
             );
@@ -227,7 +246,7 @@ final class CursorTest extends TestCase
         $model = $cursor->first();
 
         // Assertions
-        $this->assertInstanceOf(get_class($object), $model);
+        $this->assertInstanceOf($object::class, $model);
         $this->assertSame('John Doe', $model->name);
     }
 
@@ -362,7 +381,7 @@ final class CursorTest extends TestCase
         $object = new class extends AbstractModel
         {
         };
-        $class = get_class($object);
+        $class = $object::class;
         $bob = new $class();
         $bob->name = 'bob';
         $bob->occupation = 'coder';
@@ -435,7 +454,10 @@ final class CursorTest extends TestCase
     public function testShouldSerializeAnActiveCursor(): void
     {
         // Set
-        $connection = $this->instance(Connection::class, m::mock(Connection::class));
+        $connection = $this->instance(
+            Connection::class,
+            m::mock(Connection::class)
+        );
         $cursor = $this->getCursor(null, 'find', [[]]);
         $driverCollection = $this->getDriverCollection();
 
@@ -480,7 +502,7 @@ final class CursorTest extends TestCase
         }
 
         $mock = m::mock(
-            Cursor::class.'[getCursor]',
+            Cursor::class . '[getCursor]',
             [$collection, $command, $params]
         );
 
@@ -503,19 +525,15 @@ final class CursorTest extends TestCase
         /*
          * Emulates a MongoDB\Collection non serializable behavior.
          */
-        return new class() {
+        return new class () {
+            public function getCollectionName(): string
+            {
+                return 'my_collection';
+            }
+
             public function __serialize()
             {
                 throw new Exception('Unable to serialize', 1);
-            }
-
-            public function __unserialize($serialized)
-            {
-            }
-
-            public function getCollectionName()
-            {
-                return 'my_collection';
             }
         };
     }

@@ -11,10 +11,11 @@ class SchemaEmbeddedCursorTest extends TestCase
     public function tearDown(): void
     {
         parent::tearDown();
+
         m::close();
     }
 
-    public function testShouldLimitDocumentQuantity()
+    public function testShouldLimitDocumentQuantity(): void
     {
         // Arrange
         $items = [
@@ -38,7 +39,7 @@ class SchemaEmbeddedCursorTest extends TestCase
     /**
      * @dataProvider getDocumentsToSort
      */
-    public function testShouldSortDocuments($items, $parameters, $expected)
+    public function testShouldSortDocuments(array $items, array $parameters, array $expected): void
     {
         // Arrange
         $cursor = $this->getCursor(stdClass::class, $items);
@@ -51,7 +52,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         );
     }
 
-    public function testShouldSkipDocuments()
+    public function testShouldSkipDocuments(): void
     {
         // Arrange
         $items = [
@@ -71,7 +72,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         );
     }
 
-    public function testShouldCountDocuments()
+    public function testShouldCountDocuments(): void
     {
         // Arrange
         $items = [
@@ -85,7 +86,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals(3, $cursor->count());
     }
 
-    public function testShouldCountDocumentsWithCountFunction()
+    public function testShouldCountDocumentsWithCountFunction(): void
     {
         // Arrange
         $items = [
@@ -96,10 +97,10 @@ class SchemaEmbeddedCursorTest extends TestCase
         $cursor = $this->getCursor(stdClass::class, $items);
 
         // Assert
-        $this->assertEquals(3, count($cursor));
+        $this->assertEquals(3, is_countable($cursor) ? count($cursor) : 0);
     }
 
-    public function testShouldRewind()
+    public function testShouldRewind(): void
     {
         // Arrange
         $cursor = $this->getCursor();
@@ -109,7 +110,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals(0, $cursor->key());
     }
 
-    public function testShouldNotGetCurrentWhenCursorIsInvalid()
+    public function testShouldNotGetCurrentWhenCursorIsInvalid(): void
     {
         // Arrange
         $items = [];
@@ -122,7 +123,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertNull($entity);
     }
 
-    public function testShouldGetCurrentUsingEntityClass()
+    public function testShouldGetCurrentUsingEntityClass(): void
     {
         // Arrange
         $object = new stdClass();
@@ -138,7 +139,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals('A', $entity->name);
     }
 
-    public function testShouldGetAllInArrayFormat()
+    public function testShouldGetAllInArrayFormat(): void
     {
         // Arrange
         $items = [
@@ -155,7 +156,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals($items, $result);
     }
 
-    public function testShouldImplementKeyMethodFromIterator()
+    public function testShouldImplementKeyMethodFromIterator(): void
     {
         // Arrange
         $cursor = $this->getCursor();
@@ -166,7 +167,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals(7, $cursor->key());
     }
 
-    public function testShouldImplementNextMethodFromIterator()
+    public function testShouldImplementNextMethodFromIterator(): void
     {
         // Arrange
         $cursor = $this->getCursor();
@@ -178,7 +179,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertEquals(8, $cursor->key());
     }
 
-    public function testShouldImplementValidMethodFromIterator()
+    public function testShouldImplementValidMethodFromIterator(): void
     {
         // Arrange
         $items = [
@@ -194,14 +195,7 @@ class SchemaEmbeddedCursorTest extends TestCase
         $this->assertFalse($cursor->valid());
     }
 
-    protected function getCursor(
-        $entityClass = stdClass::class,
-        $items = []
-    ) {
-        return new SchemaEmbeddedCursor($entityClass, $items);
-    }
-
-    public function getDocumentsToSort()
+    public function getDocumentsToSort(): array
     {
         $age24 = (object) ['age' => 24];
 
@@ -277,5 +271,12 @@ class SchemaEmbeddedCursorTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    protected function getCursor(
+        $entityClass = stdClass::class,
+        $items = []
+    ): SchemaEmbeddedCursor {
+        return new SchemaEmbeddedCursor($entityClass, $items);
     }
 }

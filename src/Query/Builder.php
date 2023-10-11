@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Query;
 
 use InvalidArgumentException;
@@ -7,7 +8,6 @@ use Mongolid\Container\Container;
 use Mongolid\Cursor\CacheableCursor;
 use Mongolid\Cursor\Cursor;
 use Mongolid\Cursor\CursorInterface;
-use Mongolid\Cursor\EagerLoadingCursor;
 use Mongolid\Event\EventTriggerService;
 use Mongolid\Model\Exception\ModelNotFoundException;
 use Mongolid\Model\ModelInterface;
@@ -18,25 +18,20 @@ use Mongolid\Model\ModelInterface;
  */
 class Builder
 {
-    private bool $ignoreSoftDelete = false;
-
-    /**
-     * Connection that is going to be used to interact with the database.
-     *
-     * @var Connection
-     */
-    protected $connection;
-
     /**
      * In order to dispatch events when necessary.
      *
-     * @var EventTriggerService
      */
-    protected $eventService;
+    protected EventTriggerService $eventService;
 
-    public function __construct(Connection $connection)
-    {
-        $this->connection = $connection;
+    private bool $ignoreSoftDelete = false;
+
+    public function __construct(
+        /**
+         * Connection that is going to be used to interact with the database.
+         */
+        protected Connection $connection
+    ) {
     }
 
     /**
@@ -92,7 +87,13 @@ class Builder
      */
     public function insert(ModelInterface $model, array $options = [], bool $fireEvents = true): bool
     {
-        if ($fireEvents && false === $this->fireEvent('inserting', $model, true)) {
+        if (
+            $fireEvents && false === $this->fireEvent(
+                'inserting',
+                $model,
+                true
+            )
+        ) {
             return false;
         }
 
@@ -180,7 +181,8 @@ class Builder
             $this->mergeOptions($options)
         );
 
-        if ($queryResult->isAcknowledged() &&
+        if (
+            $queryResult->isAcknowledged() &&
             $queryResult->getDeletedCount()
         ) {
             $this->fireEvent('deleted', $model);
@@ -199,8 +201,12 @@ class Builder
      * @param array          $projection fields to project in MongoDB query
      * @param bool           $useCache   retrieves a CacheableCursor instead
      */
-    public function where(ModelInterface $model, $query = [], array $projection = [], bool $useCache = false): CursorInterface
-    {
+    public function where(
+        ModelInterface $model,
+        mixed $query = [],
+        array $projection = [],
+        bool $useCache = false
+    ): CursorInterface {
         $cursor = $useCache ? CacheableCursor::class : Cursor::class;
 
         $query = Resolver::resolveQuery(
@@ -208,6 +214,7 @@ class Builder
             $model,
             $this->ignoreSoftDelete
         );
+
         return new $cursor(
             $model->getCollection(),
             'find',
@@ -237,18 +244,25 @@ class Builder
      * @param ModelInterface $model      Model to query from collection
      * @param mixed          $query      MongoDB query to retrieve the model
      * @param array          $projection fields to project in MongoDB query
-     * @param boolean        $useCache   retrieves the first through a CacheableCursor
-     *
-     * @return ModelInterface|array|null
+     * @param bool           $useCache   retrieves the first through a CacheableCursor
      */
-    public function first(ModelInterface $model, $query = [], array $projection = [], bool $useCache = false)
-    {
+    public function first(
+        ModelInterface $model,
+        mixed $query = [],
+        array $projection = [],
+        bool $useCache = false
+    ): ModelInterface|array|null {
         if (null === $query) {
             return null;
         }
 
         if ($useCache) {
-            return $this->where($model, $query, $projection, $useCache)->first();
+            return $this->where(
+                $model,
+                $query,
+                $projection,
+                $useCache
+            )->first();
         }
 
         $query = Resolver::resolveQuery(
@@ -269,19 +283,21 @@ class Builder
      * @param ModelInterface $model      Model to query from collection
      * @param mixed          $query      MongoDB query to retrieve the model
      * @param array          $projection fields to project in MongoDB query
-     * @param boolean        $useCache   retrieves the first through a CacheableCursor
+     * @param bool           $useCache   retrieves the first through a CacheableCursor
      *
      * @throws ModelNotFoundException If no model was found
-     *
-     * @return ModelInterface|null
      */
-    public function firstOrFail(ModelInterface $model, $query = [], array $projection = [], bool $useCache = false)
-    {
+    public function firstOrFail(
+        ModelInterface $model,
+        mixed $query = [],
+        array $projection = [],
+        bool $useCache = false
+    ): ?ModelInterface {
         if ($result = $this->first($model, $query, $projection, $useCache)) {
             return $result;
         }
 
-        throw (new ModelNotFoundException())->setModel(get_class($model));
+        throw (new ModelNotFoundException())->setModel($model::class);
     }
 
     public function withoutSoftDelete(): self
@@ -302,9 +318,11 @@ class Builder
      */
     protected function fireEvent(string $event, ModelInterface $model, bool $halt = false)
     {
-        $event = "mongolid.{$event}: ".get_class($model);
+        $event = "mongolid.{$event}: " . $model::class;
 
-        $this->eventService ?: $this->eventService = Container::make(EventTriggerService::class);
+        $this->eventService ?: $this->eventService = Container::make(
+            EventTriggerService::class
+        );
 
         return $this->eventService->fire($event, $model, $halt);
     }
@@ -329,8 +347,6 @@ class Builder
      * @param array $fields fields to project
      *
      * @throws InvalidArgumentException If the given $fields are not a valid projection
-     *
-     * @return array
      */
     protected function prepareProjection(array $fields): array
     {
@@ -351,7 +367,7 @@ class Builder
 
             if (is_int($key) && is_string($value)) {
                 $key = $value;
-                if (0 === strpos($value, '-')) {
+                if (str_starts_with($value, '-')) {
                     $key = substr($key, 1);
                     $value = false;
                 } else {
@@ -390,9 +406,18 @@ class Builder
         foreach ($newData as $k => $v) {
             if (!isset($oldData[$k])) { // new field
                 $changes['$set']["{$keyfix}{$k}"] = $v;
-            } elseif ($oldData[$k] != $v) {  // changed value
-                if (is_array($v) && is_array($oldData[$k]) && $v) { // check array recursively for changes
-                    $this->calculateChanges($changes, $v, $oldData[$k], "{$keyfix}{$k}.");
+            } elseif ($oldData[$k] != $v) { // changed value
+                if (
+                    is_array($v) && is_array(
+                        $oldData[$k]
+                    ) && $v
+                ) { // check array recursively for changes
+                    $this->calculateChanges(
+                        $changes,
+                        $v,
+                        $oldData[$k],
+                        "{$keyfix}{$k}."
+                    );
                 } else {
                     // overwrite normal changes in keys
                     // this applies to previously empty arrays/documents too
@@ -404,6 +429,7 @@ class Builder
         foreach ($oldData as $k => $v) { // data that used to exist, but now doesn't
             if (!isset($newData[$k])) { // removed field
                 $changes['$unset']["{$keyfix}{$k}"] = '';
+
                 continue;
             }
         }
@@ -414,8 +440,6 @@ class Builder
      *
      * @param array $defaultOptions default options array
      * @param array $toMergeOptions to merge options array
-     *
-     * @return array
      */
     private function mergeOptions(array $defaultOptions = [], array $toMergeOptions = []): array
     {
@@ -430,10 +454,14 @@ class Builder
         $model->syncOriginalDocumentAttributes();
     }
 
-    private function getUpdateData($model, array $data): array
+    private function getUpdateData(ModelInterface $model, array $data): array
     {
         $changes = [];
-        $this->calculateChanges($changes, $data, $model->getOriginalDocumentAttributes());
+        $this->calculateChanges(
+            $changes,
+            $data,
+            $model->getOriginalDocumentAttributes()
+        );
 
         return $changes;
     }

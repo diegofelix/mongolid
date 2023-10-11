@@ -3,7 +3,6 @@
 namespace Mongolid\DataMapper;
 
 use Mongolid\Container\Container;
-use Mongolid\Container\Ioc;
 use Mongolid\Schema\Schema;
 
 /**
@@ -19,9 +18,8 @@ class SchemaMapper
     /**
      * The actual schema to maps the data.
      *
-     * @var Schema
      */
-    public $schema;
+    public Schema $schema;
 
     /**
      * Types that can be casted.
@@ -30,7 +28,7 @@ class SchemaMapper
      *
      * @var string[]
      */
-    protected $castableTypes = ['int', 'integer', 'bool', 'boolean', 'float', 'double', 'real', 'string'];
+    protected array $castableTypes = ['int', 'integer', 'bool', 'boolean', 'float', 'double', 'real', 'string'];
 
     /**
      * @param Schema $schema schema that will be used to map each field
@@ -48,7 +46,7 @@ class SchemaMapper
      *
      * @return array
      */
-    public function map($data)
+    public function map(array $data)
     {
         $data = $this->parseToArray($data);
         $this->clearDynamic($data);
@@ -59,6 +57,41 @@ class SchemaMapper
         }
 
         return $data;
+    }
+
+    /**
+     * Parse a value based on a field yype of the schema.
+     *
+     * @param mixed  $value     value to be parsed
+     * @param string $fieldType description of how the field should be treated
+     *
+     * @return mixed $value Value parsed to match $type
+     */
+    public function parseField(mixed $value, string $fieldType)
+    {
+        // Uses $fieldType method of the schema to parse the value
+        if (method_exists($this->schema, $fieldType)) {
+            return $this->schema->$fieldType($value);
+        }
+        // Returns null or an empty array
+        if (null === $value) {
+            return $value;
+        }
+        if (is_array($value) && empty($value)) {
+            return $value;
+        }
+
+        // If fieldType is castable (Ex: 'int')
+        if (in_array($fieldType, $this->castableTypes)) {
+            return $this->cast($value, $fieldType);
+        }
+
+        // If the field type points to another schema.
+        if (str_starts_with($fieldType, 'schema.')) {
+            return $this->mapToSchema($value, substr($fieldType, 7));
+        }
+
+        return $value;
     }
 
     /**
@@ -74,39 +107,6 @@ class SchemaMapper
     }
 
     /**
-     * Parse a value based on a field yype of the schema.
-     *
-     * @param mixed  $value     value to be parsed
-     * @param string $fieldType description of how the field should be treated
-     *
-     * @return mixed $value Value parsed to match $type
-     */
-    public function parseField($value, string $fieldType)
-    {
-        // Uses $fieldType method of the schema to parse the value
-        if (method_exists($this->schema, $fieldType)) {
-            return $this->schema->$fieldType($value);
-        }
-
-        // Returns null or an empty array
-        if (null === $value || is_array($value) && empty($value)) {
-            return $value;
-        }
-
-        // If fieldType is castable (Ex: 'int')
-        if (in_array($fieldType, $this->castableTypes)) {
-            return $this->cast($value, $fieldType);
-        }
-
-        // If the field type points to another schema.
-        if ('schema.' == substr($fieldType, 0, 7)) {
-            return $this->mapToSchema($value, substr($fieldType, 7));
-        }
-
-        return $value;
-    }
-
-    /**
      * Uses PHP's settype to cast a value to a type.
      *
      * @see http://php.net/manual/pt_BR/function.settype.php
@@ -116,7 +116,7 @@ class SchemaMapper
      *
      * @return mixed
      */
-    protected function cast($value, string $type)
+    protected function cast(mixed $value, string $type)
     {
         settype($value, $type);
 
@@ -132,7 +132,7 @@ class SchemaMapper
      *
      * @return mixed
      */
-    protected function mapToSchema($value, string $schemaClass)
+    protected function mapToSchema(mixed $value, string $schemaClass)
     {
         $value = (array) $value;
         $schema = Container::make($schemaClass);
@@ -153,17 +153,13 @@ class SchemaMapper
      * Parses an object to an array before sending it to the SchemaMapper.
      *
      * @param mixed $object the object that will be transformed into an array
-     *
-     * @return array
      */
-    protected function parseToArray($object): array
+    protected function parseToArray(mixed $object): array
     {
         if (!is_array($object)) {
-            $attributes = method_exists($object, 'getAttributes')
+            return method_exists($object, 'getAttributes')
                 ? $object->getAttributes()
                 : get_object_vars($object);
-
-            return $attributes;
         }
 
         return $object;

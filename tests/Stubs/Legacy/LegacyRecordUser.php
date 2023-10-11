@@ -1,34 +1,23 @@
 <?php
+
 namespace Mongolid\Tests\Stubs\Legacy;
 
 use Mongolid\LegacyRecord;
 
 class LegacyRecordUser extends LegacyRecord
 {
-    /**
-     * @var string
-     */
-    protected $collection = 'users';
+    public bool $mutable = true;
 
-    /**
-     * @var bool
-     */
-    public $mutable = true;
+    public bool $dynamic = false;
 
-    /**
-     * @var bool
-     */
-    protected $timestamps = true;
+    protected string $collection = 'users';
 
-    /**
-     * @var bool
-     */
-    public $dynamic = false;
+    protected bool $timestamps = true;
 
     /**
      * @var string[]
      */
-    protected $fillable = [
+    protected array $fillable = [
         'name',
     ];
 
@@ -42,7 +31,7 @@ class LegacyRecordUser extends LegacyRecord
         return $this->referencesMany(LegacyRecordUser::class, 'grandsons');
     }
 
-    public function setSecretAttribute($value)
+    public function setSecretAttribute($value): string
     {
         return 'password_override';
     }

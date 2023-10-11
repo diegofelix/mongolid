@@ -8,7 +8,6 @@ use ErrorException;
 use Mongolid\Container\Container;
 use Mongolid\Query\EagerLoader\EagerLoader;
 use Mongolid\Util\CacheComponentInterface;
-use Traversable;
 
 /**
  * This class wraps the query execution and the actual creation of the driver
@@ -19,32 +18,30 @@ use Traversable;
 class SchemaCacheableCursor extends SchemaCursor
 {
     /**
+     * Limits the amount of documents that will be cached for performance reasons.
+     */
+    public const DOCUMENT_LIMIT = 100;
+
+    /**
      * The documents that were retrieved from the database in a serializable way.
      *
      * @var array
      */
-    protected $documents;
+    protected array $documents;
 
     /**
      * Limit of the query. It is stored because when caching the documents
      * the DOCUMENT_LIMIT const will be used.
      *
-     * @var int
      */
-    protected $originalLimit;
+    protected int $originalLimit;
 
     /**
      * Means that the CacheableCursor is wapping the original cursor and not
      * reading from Cache anymore.
      *
-     * @var bool
      */
-    protected $ignoreCache = false;
-
-    /**
-     * Limits the amount of documents that will be cached for performance reasons.
-     */
-    const DOCUMENT_LIMIT = 100;
+    protected bool $ignoreCache = false;
 
     /**
      * Actually returns a Traversable object with the DriverCursor within.
@@ -58,10 +55,12 @@ class SchemaCacheableCursor extends SchemaCursor
     protected function getCursor(): Iterator
     {
         // Returns original (non-cached) cursor
-        if ($this->ignoreCache || $this->position >= self::DOCUMENT_LIMIT) {
+        if ($this->ignoreCache) {
             return $this->getOriginalCursor();
         }
-
+        if ($this->position >= self::DOCUMENT_LIMIT) {
+            return $this->getOriginalCursor();
+        }
         // Returns cached set of documents
         if ($this->documents) {
             return $this->documents;
@@ -73,7 +72,7 @@ class SchemaCacheableCursor extends SchemaCursor
 
         try {
             $cachedDocuments = $cacheComponent->get($cacheKey, null);
-        } catch (ErrorException $error) {
+        } catch (ErrorException) {
             $cachedDocuments = [];
         }
 

@@ -36,8 +36,11 @@ class EntityAssembler
         foreach ($document as $field => $value) {
             $fieldType = $schema->fields[$field] ?? null;
 
-            if ($fieldType && 'schema.' == substr($fieldType, 0, 7)) {
-                $value = $this->assembleDocumentsRecursively($value, substr($fieldType, 7));
+            if ($fieldType && str_starts_with($fieldType, 'schema.')) {
+                $value = $this->assembleDocumentsRecursively(
+                    $value,
+                    substr($fieldType, 7)
+                );
             }
 
             $model->$field = $value;
@@ -63,7 +66,7 @@ class EntityAssembler
         if ($entity instanceof PolymorphableModelInterface) {
             $class = $entity->polymorph($entity->getDocumentAttributes());
 
-            if ($class !== get_class($entity)) {
+            if ($class !== $entity::class) {
                 $originalAttributes = $entity->getDocumentAttributes();
                 $entity = Container::make($class);
                 $entity->fill($originalAttributes, true);
@@ -80,7 +83,7 @@ class EntityAssembler
      *
      * @return mixed the entity with original attributes
      */
-    protected function prepareOriginalAttributes($entity)
+    protected function prepareOriginalAttributes(mixed $entity)
     {
         if ($entity instanceof ModelInterface) {
             $entity->syncOriginalDocumentAttributes();
@@ -97,7 +100,7 @@ class EntityAssembler
      *
      * @return mixed
      */
-    protected function assembleDocumentsRecursively($value, string $schemaClass)
+    protected function assembleDocumentsRecursively(mixed $value, string $schemaClass)
     {
         $value = (array) $value;
 

@@ -20,7 +20,7 @@ class DocumentEmbedder
      *
      * @return bool Success
      */
-    public function embed($parent, string $field, &$entity): bool
+    public function embed(mixed $parent, string $field, mixed &$entity): bool
     {
         // In order to update the document if it exists inside the $parent
         $this->unembed($parent, $field, $entity);
@@ -42,7 +42,7 @@ class DocumentEmbedder
      *
      * @return bool Success
      */
-    public function unembed($parent, string $field, &$entity): bool
+    public function unembed(mixed $parent, string $field, mixed &$entity): bool
     {
         $fieldValue = (array) $parent->$field;
         $id = $this->getId($entity);
@@ -67,7 +67,7 @@ class DocumentEmbedder
      *
      * @return bool Success
      */
-    public function attach($parent, string $field, &$entity): bool
+    public function attach(mixed $parent, string $field, mixed &$entity): bool
     {
         $fieldValue = (array) $parent->$field;
         $newId = $this->getId($entity);
@@ -93,7 +93,7 @@ class DocumentEmbedder
      *
      * @return bool Success
      */
-    public function detach($parent, string $field, &$entity): bool
+    public function detach(mixed $parent, string $field, mixed &$entity): bool
     {
         $fieldValue = (array) $parent->$field;
         $newId = $this->getId($entity);
@@ -117,7 +117,7 @@ class DocumentEmbedder
      *
      * @return ObjectId|mixed
      */
-    protected function getId(&$object)
+    protected function getId(mixed &$object)
     {
         if (is_array($object)) {
             if (isset($object['_id']) && $object['_id']) {

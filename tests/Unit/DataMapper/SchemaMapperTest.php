@@ -6,16 +6,18 @@ use Mockery as m;
 use Mongolid\Container\Container;
 use Mongolid\Schema\Schema;
 use Mongolid\TestCase;
+use Mockery\LegacyMockInterface;
 
 class SchemaMapperTest extends TestCase
 {
     public function tearDown(): void
     {
         parent::tearDown();
+
         m::close();
     }
 
-    public function testShouldMapToFieldsOfSchema()
+    public function testShouldMapToFieldsOfSchema(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -25,7 +27,7 @@ class SchemaMapperTest extends TestCase
             'stuff' => 'schema.My\Own\Schema',
         ];
         $schemaMapper = m::mock(
-            SchemaMapper::class.'[clearDynamic,parseField]',
+            SchemaMapper::class . '[clearDynamic,parseField]',
             [$schema]
         );
         $schemaMapper->shouldAllowMockingProtectedMethods();
@@ -44,7 +46,7 @@ class SchemaMapperTest extends TestCase
             $schemaMapper->shouldReceive('parseField')
                 ->once()
                 ->with($data[$key], $value)
-                ->andReturn($data[$key].'.PARSED');
+                ->andReturn($data[$key] . '.PARSED');
         }
 
         // Assert
@@ -58,7 +60,7 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldClearDynamicFieldsIfSchemaIsNotDynamic()
+    public function testShouldClearDynamicFieldsIfSchemaIsNotDynamic(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -85,7 +87,7 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldNotClearDynamicFieldsIfSchemaIsDynamic()
+    public function testShouldNotClearDynamicFieldsIfSchemaIsDynamic(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -113,7 +115,7 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldParseFieldIntoCastableType()
+    public function testShouldParseFieldIntoCastableType(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -131,12 +133,12 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldParseFieldIntoAnotherMappedSchemaIfTypeBeginsWithSchema()
+    public function testShouldParseFieldIntoAnotherMappedSchemaIfTypeBeginsWithSchema(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
         $schemaMapper = m::mock(
-            SchemaMapper::class.'[mapToSchema]',
+            SchemaMapper::class . '[mapToSchema]',
             [$schema]
         );
         $schemaMapper->shouldAllowMockingProtectedMethods();
@@ -154,10 +156,10 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldParseFieldUsingAMethodInSchemaIfTypeIsAnUnknownString()
+    public function testShouldParseFieldUsingAMethodInSchemaIfTypeIsAnUnknownString(): void
     {
         // Arrange
-        $schemaClass = new class() extends Schema {
+        $schemaClass = new class () extends Schema {
             public function pumpkinPoint($value)
             {
                 return $value * 2;
@@ -174,7 +176,7 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldMapAnArrayValueToAnotherSchema()
+    public function testShouldMapAnArrayValueToAnotherSchema(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -187,32 +189,42 @@ class SchemaMapperTest extends TestCase
         Container::instance('Xd\MySchema', $mySchema);
 
         // When instantiating the SchemaMapper with the specified $param as dependency
-        Container::bind(SchemaMapper::class, function ($container, $params) use ($value, $mySchema, $test) {
-            // Check if mySchema has been injected correctly
-            $test->assertSame($mySchema, $params['schema']);
+        Container::bind(
+            SchemaMapper::class,
+            function ($container, $params) use ($value, $mySchema, $test): LegacyMockInterface {
+                // Check if mySchema has been injected correctly
+                $test->assertSame($mySchema, $params['schema']);
 
-            // Instantiate a SchemaMapper with mySchema
-            $anotherSchemaMapper = m::mock(SchemaMapper::class, [$params['schema']]);
+                // Instantiate a SchemaMapper with mySchema
+                $anotherSchemaMapper = m::mock(
+                    SchemaMapper::class,
+                    [$params['schema']]
+                );
 
-            // Set expectation to receive a map call
-            $anotherSchemaMapper->shouldReceive('map')
-                ->once()
-                ->with($value)
-                ->andReturn(['foo' => 'PARSED']);
+                // Set expectation to receive a map call
+                $anotherSchemaMapper->shouldReceive('map')
+                    ->once()
+                    ->with($value)
+                    ->andReturn(['foo' => 'PARSED']);
 
-            return $anotherSchemaMapper;
-        });
+                return $anotherSchemaMapper;
+            }
+        );
 
         // Assert
         $this->assertEquals(
             [
                 ['foo' => 'PARSED'],
             ],
-            $this->callProtected($schemaMapper, 'mapToSchema', [$value, 'Xd\MySchema'])
+            $this->callProtected(
+                $schemaMapper,
+                'mapToSchema',
+                [$value, 'Xd\MySchema']
+            )
         );
     }
 
-    public function testShouldParseToArrayGettingObjectAttributes()
+    public function testShouldParseToArrayGettingObjectAttributes(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -226,7 +238,7 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldParseToArrayIfIsAnArray()
+    public function testShouldParseToArrayIfIsAnArray(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
@@ -240,13 +252,16 @@ class SchemaMapperTest extends TestCase
         );
     }
 
-    public function testShouldGetAttributesWhenGetAttributesMethodIsAvailable()
+    public function testShouldGetAttributesWhenGetAttributesMethodIsAvailable(): void
     {
         // Arrange
         $schema = m::mock(Schema::class);
         $schemaMapper = new SchemaMapper($schema);
-        $object = new class() {
-            public function getAttributes()
+        $object = new class () {
+            /**
+             * @return array{foo: string}
+             */
+            public function getAttributes(): array
             {
                 return ['foo' => 'bar'];
             }

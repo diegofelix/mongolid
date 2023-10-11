@@ -1,9 +1,9 @@
 <?php
+
 namespace Mongolid\Query\EagerLoader;
 
 use MongoDB\BSON\ObjectId;
 use Mongolid\Query\EagerLoader\Exception\EagerLoaderException;
-use Mongolid\Query\EagerLoader\Exception\InvalidModelKeyException;
 
 /**
  * Responsible for extract ids from the model based on its
@@ -12,17 +12,13 @@ use Mongolid\Query\EagerLoader\Exception\InvalidModelKeyException;
  */
 class Extractor
 {
-    /**
-     * This array will handle all related models extracted
-     * from the models passed by.
-     *
-     * @var array
-     */
-    private $relatedModels;
-
-    public function __construct(array $relatedModels)
-    {
-        $this->relatedModels = $relatedModels;
+    public function __construct(
+        /**
+         * This array will handle all related models extracted
+         * from the models passed by.
+         */
+        private array $relatedModels
+    ) {
     }
 
     /**
@@ -67,7 +63,7 @@ class Extractor
      *
      * @example 'skus.shop_id' => I want all shop ids from embedded skus.
      */
-    private function keyHasDots($key): bool
+    private function keyHasDots(string $key): bool
     {
         return str_contains($key, '.');
     }
@@ -79,7 +75,7 @@ class Extractor
      */
     private function extractFromEmbeddedModel(string $eagerLoadKey, array $model, string $key): void
     {
-        list($method, $attribute) = explode('.', $key);
+        [$method, $attribute] = explode('.', $key);
 
         // As we are working with models as array, this give us
         // flexibility to use it as array instead of calling methods.
@@ -94,7 +90,9 @@ class Extractor
             // In case the referenced key on parent model was not
             // found on related model, we should warn that the user
             // is trying to eager load an invalid model.
-            throw new EagerLoaderException('Referenced key was not found on child model.');
+            throw new EagerLoaderException(
+                'Referenced key was not found on child model.'
+            );
         }
 
         // We only want to object ids to string to give

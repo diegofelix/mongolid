@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Cursor;
 
 use Iterator;
@@ -10,7 +11,6 @@ use MongoDB\Driver\ReadPreference;
 use MongoDB\Model\CachingIterator;
 use Mongolid\Connection\Connection;
 use Mongolid\Container\Container;
-use Serializable;
 
 /**
  * This class wraps the query execution and the actual creation of the driver cursor.
@@ -21,37 +21,16 @@ use Serializable;
 class Cursor implements CursorInterface
 {
     /**
-     * @var Collection
-     */
-    protected $collection;
-
-    /**
-     * The command that is being called in the $collection.
-     *
-     * @var string
-     */
-    protected $command;
-
-    /**
-     * The parameters of the $command.
-     *
-     * @var array
-     */
-    protected $params;
-
-    /**
      * The MongoDB cursor used to interact with db.
      *
-     * @var DriverCursor
      */
-    protected $cursor = null;
+    protected DriverCursor $cursor;
 
     /**
      * Iterator position (to be used with foreach).
      *
-     * @var int
      */
-    protected $position = 0;
+    protected int $position = 0;
 
     /**
      * @param Collection $collection the raw collection object that will be used to retrieve the documents
@@ -59,14 +38,17 @@ class Cursor implements CursorInterface
      * @param array      $params     the parameters of the $command
      */
     public function __construct(
-        Collection $collection,
-        string $command,
-        array $params
+        protected Collection $collection,
+        /**
+         * The command that is being called in the $collection.
+         */
+        protected string $command,
+        /**
+         * The parameters of the $command.
+         */
+        protected array $params
     ) {
         $this->cursor = null;
-        $this->collection = $collection;
-        $this->command = $command;
-        $this->params = $params;
     }
 
     /**
@@ -163,7 +145,7 @@ class Cursor implements CursorInterface
     {
         try {
             $this->getCursor()->rewind();
-        } catch (LogicException | BaseLogicException $e) {
+        } catch (LogicException | BaseLogicException) {
             $this->fresh();
             $this->getCursor();
         }
@@ -197,7 +179,7 @@ class Cursor implements CursorInterface
      * through it again. A new request to the database will be made in the next
      * iteration.
      */
-    public function fresh()
+    public function fresh(): void
     {
         $this->cursor = null;
     }
@@ -229,8 +211,6 @@ class Cursor implements CursorInterface
 
     /**
      * Convert the cursor instance to an array of Objects.
-     *
-     * @return array
      */
     public function all(): array
     {
@@ -243,8 +223,6 @@ class Cursor implements CursorInterface
 
     /**
      * Convert the cursor instance to a full associative array.
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -253,6 +231,21 @@ class Cursor implements CursorInterface
         }
 
         return $result ?? [];
+    }
+
+    /**
+     * Actually returns a Traversable object with the DriverCursor within.
+     * If it does not exists yet, create it using the $collection, $command and
+     * $params given.
+     */
+    protected function getCursor(): Iterator
+    {
+        if (!$this->cursor) {
+            $driverCursor = $this->collection->{$this->command}(...$this->params);
+            $this->cursor = new CachingIterator($driverCursor);
+        }
+
+        return $this->cursor;
     }
 
     /**
@@ -285,20 +278,5 @@ class Cursor implements CursorInterface
         }
 
         $this->collection = $collectionObject;
-    }
-
-    /**
-     * Actually returns a Traversable object with the DriverCursor within.
-     * If it does not exists yet, create it using the $collection, $command and
-     * $params given.
-     */
-    protected function getCursor(): Iterator
-    {
-        if (!$this->cursor) {
-            $driverCursor = $this->collection->{$this->command}(...$this->params);
-            $this->cursor = new CachingIterator($driverCursor);
-        }
-
-        return $this->cursor;
     }
 }

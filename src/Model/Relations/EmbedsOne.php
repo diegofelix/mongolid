@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model\Relations;
 
 use Mongolid\Model\ModelInterface;
@@ -17,10 +18,7 @@ class EmbedsOne extends AbstractRelation
         $this->pristine = false;
     }
 
-    /**
-     * @return ModelInterface|null
-     */
-    public function get()
+    public function get(): ?ModelInterface
     {
         return $this->parent->{$this->field};
     }

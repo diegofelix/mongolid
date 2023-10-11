@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid;
 
 use Illuminate\Container\Container as IlluminateContainer;
@@ -10,9 +11,41 @@ use ReflectionMethod;
 
 class TestCase extends PHPUnitTestCase
 {
+    public function assertMongoQueryEquals($expectedQuery, $query)
+    {
+        $this->assertEquals($expectedQuery, $query, 'Queries are not equals');
+
+        if (!is_array($expectedQuery)) {
+            return;
+        }
+
+        foreach ($expectedQuery as $key => $value) {
+            if (is_object($value)) {
+                $this->assertInstanceOf(
+                    $value::class,
+                    $query[$key],
+                    'Type of an object within the query is not equals'
+                );
+
+                if (method_exists($value, '__toString')) {
+                    $this->assertEquals(
+                        (string) $expectedQuery[$key],
+                        (string) $query[$key],
+                        'Object within the query is not equals'
+                    );
+                }
+            }
+
+            if (is_array($value)) {
+                $this->assertMongoQueryEquals($value, $query[$key]);
+            }
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
+
         Container::setContainer(new IlluminateContainer());
     }
 
@@ -20,6 +53,7 @@ class TestCase extends PHPUnitTestCase
     {
         Container::flush();
         m::close();
+
         parent::tearDown();
     }
 
@@ -33,7 +67,7 @@ class TestCase extends PHPUnitTestCase
      */
     protected function callProtected($obj, string $method, array $args = [])
     {
-        $methodObj = new ReflectionMethod(get_class($obj), $method);
+        $methodObj = new ReflectionMethod($obj::class, $method);
         $methodObj->setAccessible(true);
 
         return $methodObj->invokeArgs($obj, $args);
@@ -67,6 +101,7 @@ class TestCase extends PHPUnitTestCase
         $class = new ReflectionClass($obj);
         $property = $class->getProperty($property);
         $property->setAccessible(true);
+
         return $property->getValue($obj);
     }
 
@@ -83,28 +118,5 @@ class TestCase extends PHPUnitTestCase
         );
 
         return $instance;
-    }
-
-    public function assertMongoQueryEquals($expectedQuery, $query)
-    {
-        $this->assertEquals($expectedQuery, $query, 'Queries are not equals');
-
-        if (!is_array($expectedQuery)) {
-            return;
-        }
-
-        foreach ($expectedQuery as $key => $value) {
-            if (is_object($value)) {
-                $this->assertInstanceOf(get_class($value), $query[$key], 'Type of an object within the query is not equals');
-
-                if (method_exists($value, '__toString')) {
-                    $this->assertEquals((string) $expectedQuery[$key], (string) $query[$key], 'Object within the query is not equals');
-                }
-            }
-
-            if (is_array($value)) {
-                $this->assertMongoQueryEquals($value, $query[$key]);
-            }
-        }
     }
 }

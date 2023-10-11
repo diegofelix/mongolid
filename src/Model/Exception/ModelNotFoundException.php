@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model\Exception;
 
 use RuntimeException;
@@ -11,16 +12,14 @@ class ModelNotFoundException extends RuntimeException
     /**
      * Exception message.
      *
-     * @var string
      */
-    protected $message = 'No query results for model';
+    protected string $message = 'No query results for model';
 
     /**
      * Name of the affected Mongolid model.
      *
-     * @var string
      */
-    protected $model;
+    protected string $model;
 
     /**
      * Set the affected Mongolid model.

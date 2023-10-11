@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Tests\Integration;
 
 use Illuminate\Support\Arr;
@@ -62,7 +63,11 @@ final class EmbedsManyRelationTest extends IntegrationTestCase
         // changing the field with fillable
         $john->siblings()->add($bob);
         $this->assertSiblings([$bob], $john);
-        $john = EmbeddedUser::fill(['embedded_siblings' => [$chuck]], $john, true);
+        $john = EmbeddedUser::fill(
+            ['embedded_siblings' => [$chuck]],
+            $john,
+            true
+        );
         $this->assertSiblings([$chuck], $john);
     }
 
@@ -120,14 +125,21 @@ final class EmbedsManyRelationTest extends IntegrationTestCase
         // changing the field with fillable
         $john->grandsons()->add($bob);
         $this->assertGrandsons([$bob], $john);
-        $john = EmbeddedUser::fill(['other_arbitrary_field' => [$chuck]], $john, true);
+        $john = EmbeddedUser::fill(
+            ['other_arbitrary_field' => [$chuck]],
+            $john,
+            true
+        );
         $this->assertGrandsons([$chuck], $john);
 
         // save and retrieve object
         $this->assertTrue($john->save());
         $john = $john->first($john->_id);
 
-        $this->assertInstanceOf(EmbeddedUser::class, $john->grandsons->first());
+        $this->assertInstanceOf(
+            EmbeddedUser::class,
+            $john->grandsons->first()
+        );
         $this->assertEquals(
             Arr::except($chuck->toArray(), 'updated_at'),
             Arr::except($john->grandsons->first()->toArray(), 'updated_at')
@@ -140,7 +152,10 @@ final class EmbedsManyRelationTest extends IntegrationTestCase
         $this->assertTrue($john->update());
         $john = $john->first($john->_id);
 
-        $this->assertInstanceOf(EmbeddedUser::class, $john->grandsons->first());
+        $this->assertInstanceOf(
+            EmbeddedUser::class,
+            $john->grandsons->first()
+        );
         $this->assertEquals(
             Arr::except($chuck->toArray(), 'updated_at'),
             Arr::except($john->grandsons->first()->toArray(), 'updated_at')
@@ -157,7 +172,7 @@ final class EmbedsManyRelationTest extends IntegrationTestCase
         return $user;
     }
 
-    private function assertSiblings($expectedSiblings, EmbeddedUser $model)
+    private function assertSiblings(array $expectedSiblings, EmbeddedUser $model): void
     {
         $expected = [];
         foreach ($expectedSiblings as $sibling) {
@@ -177,7 +192,7 @@ final class EmbedsManyRelationTest extends IntegrationTestCase
         $this->assertSame($expected, $model->embedded_siblings);
     }
 
-    private function assertGrandsons($expectedGrandsons, EmbeddedUser $model)
+    private function assertGrandsons(array $expectedGrandsons, EmbeddedUser $model): void
     {
         $expected = [];
         foreach ($expectedGrandsons as $grandson) {

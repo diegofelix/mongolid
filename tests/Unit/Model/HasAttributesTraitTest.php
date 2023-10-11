@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model;
 
 use MongoDB\BSON\ObjectId;
@@ -11,7 +12,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldGetAttributeFromMutator(): void
     {
         // Set
-        $model = new class()
+        $model = new class ()
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -38,7 +39,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldIgnoreMutators(): void
     {
         // Set
-        $model = new class()
+        $model = new class ()
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -65,7 +66,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldSetAttributeFromMutator(): void
     {
         // Set
-        $model = new class()
+        $model = new class ()
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -97,9 +98,9 @@ final class HasAttributesTraitTest extends TestCase
         array $guarded,
         array $input,
         array $expected
-    ) {
+    ): void {
         // Set
-        $model = new class($fillable, $guarded) implements HasAttributesInterface
+        $model = new class ($fillable, $guarded) implements HasAttributesInterface
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -261,7 +262,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldForceFillAttributes(): void
     {
         // Set
-        $model = new class() implements HasAttributesInterface
+        $model = new class () implements HasAttributesInterface
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -283,7 +284,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldBeCastableToArray(): void
     {
         // Set
-        $model = new class()
+        $model = new class ()
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -302,7 +303,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldSetOriginalAttributes(): void
     {
         // Set
-        $model = new class() implements HasAttributesInterface
+        $model = new class () implements HasAttributesInterface
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -322,7 +323,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldFallbackOriginalAttributesIfUnserializationFails(): void
     {
         // Set
-        $model = new class() implements HasAttributesInterface
+        $model = new class () implements HasAttributesInterface
         {
             use HasAttributesTrait;
             use HasRelationsTrait;
@@ -330,7 +331,7 @@ final class HasAttributesTraitTest extends TestCase
             public function __construct()
             {
                 $this->attributes = [
-                    function () {
+                    function (): void {
                     },
                 ];
             }
@@ -347,7 +348,7 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldCheckIfAttributeIsSet(): void
     {
         // Set
-        $model = new class() extends AbstractModel
+        $model = new class () extends AbstractModel
         {
         };
 
@@ -363,14 +364,14 @@ final class HasAttributesTraitTest extends TestCase
     public function testShouldCheckIfMutatedAttributeIsSet(): void
     {
         // Set
-        $model = new class() extends AbstractModel
+        $model = new class () extends AbstractModel
         {
             /**
              * {@inheritdoc}
              */
             public $mutable = true;
 
-            public function getNameDocumentAttribute()
+            public function getNameDocumentAttribute(): string
             {
                 return 'John';
             }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Model\Relations;
 
 use Mongolid\Cursor\EmbeddedCursor;
@@ -34,8 +35,6 @@ class EmbedsMany extends AbstractRelation
 
     /**
      * Replace embedded documents.
-     *
-     * @param array $entities
      */
     public function replace(array $entities): void
     {
@@ -59,7 +58,9 @@ class EmbedsMany extends AbstractRelation
             }
         }
 
-        $this->parent->{$this->field} = array_values((array) $this->parent->{$this->field});
+        $this->parent->{$this->field} = array_values(
+            (array) $this->parent->{$this->field}
+        );
         $this->pristine = false;
     }
 
@@ -69,10 +70,7 @@ class EmbedsMany extends AbstractRelation
         $this->pristine = false;
     }
 
-    /**
-     * @return EmbeddedCursor
-     */
-    public function get()
+    public function get(): EmbeddedCursor
     {
         $items = $this->parent->{$this->field} ?? [];
 

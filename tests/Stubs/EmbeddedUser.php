@@ -1,19 +1,14 @@
 <?php
+
 namespace Mongolid\Tests\Stubs;
 
 use Mongolid\Model\AbstractModel;
 
 class EmbeddedUser extends AbstractModel
 {
-    /**
-     * @var string
-     */
-    protected $collection = 'users';
+    protected string $collection = 'users';
 
-    /**
-     * @var bool
-     */
-    protected $timestamps = true;
+    protected bool $timestamps = true;
 
     public function parent()
     {

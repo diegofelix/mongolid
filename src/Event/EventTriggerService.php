@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Event;
 
 /**
@@ -9,9 +10,8 @@ class EventTriggerService
     /**
      * The one who are going to actually trigger the events to the rest of the application.
      *
-     * @var EventTriggerInterface
      */
-    protected $dispatcher;
+    protected EventTriggerInterface $dispatcher;
 
     /**
      * Registers a object that will have the responsibility of firing events to
@@ -19,7 +19,7 @@ class EventTriggerService
      *
      * @param EventTriggerInterface $builder event trigger object
      */
-    public function registerEventDispatcher(EventTriggerInterface $builder)
+    public function registerEventDispatcher(EventTriggerInterface $builder): void
     {
         $this->dispatcher = $builder;
     }
@@ -36,7 +36,7 @@ class EventTriggerService
      *
      * @return mixed Event handler return. The importance of this return is determined by $halt
      */
-    public function fire(string $event, $payload, bool $halt = false)
+    public function fire(string $event, mixed $payload, bool $halt = false)
     {
         if ($this->dispatcher) {
             return $this->dispatcher->fire($event, $payload, $halt);

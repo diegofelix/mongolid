@@ -17,34 +17,21 @@ use Mongolid\Schema\Schema;
 class SchemaEmbeddedCursor implements CursorInterface
 {
     /**
-     * Entity class that will be returned while iterating.
-     *
-     * @var string
-     */
-    public $entityClass;
-
-    /**
-     * The actual array of embedded documents.
-     *
-     * @var array
-     */
-    protected $items = [];
-
-    /**
      * Iterator position (to be used with foreach).
-     *
-     * @var int
      */
-    private $position = 0;
+    private int $position = 0;
 
     /**
      * @param string $entityClass class of the objects that will be retrieved by the cursor
      * @param array  $items       the items array
      */
-    public function __construct($entityClass, array $items)
-    {
-        $this->items = $items;
-        $this->entityClass = $entityClass;
+    public function __construct(
+        public $entityClass,
+        /**
+         * The actual array of embedded documents.
+         */
+        protected array $items
+    ) {
     }
 
     /**
@@ -77,7 +64,7 @@ class SchemaEmbeddedCursor implements CursorInterface
             // the $direction. It mimics how the mongodb does sorting internally.
             usort(
                 $this->items,
-                function ($a, $b) use ($key, $direction) {
+                function ($a, $b) use ($key, $direction): int|float {
                     $a = is_object($a)
                         ? ($a->$key ?? null)
                         : ($a[$key] ?? null);
@@ -143,29 +130,12 @@ class SchemaEmbeddedCursor implements CursorInterface
         }
 
         $schema = $this->getSchemaForEntity();
-        $entityAssembler = Container::make(EntityAssembler::class, compact('schema'));
+        $entityAssembler = Container::make(
+            EntityAssembler::class,
+            compact('schema')
+        );
 
         return $entityAssembler->assemble($document, $schema);
-    }
-
-    /**
-     * Retrieve a schema based on Entity Class.
-     *
-     * @return Schema
-     */
-    protected function getSchemaForEntity(): Schema
-    {
-        if ($this->entityClass instanceof Schema) {
-            return $this->entityClass;
-        }
-
-        $model = new $this->entityClass();
-
-        if ($model instanceof LegacyRecord) {
-            return $model->getSchema();
-        }
-
-        return new DynamicSchema();
     }
 
     /**
@@ -220,5 +190,23 @@ class SchemaEmbeddedCursor implements CursorInterface
     public function toArray(): array
     {
         return $this->items;
+    }
+
+    /**
+     * Retrieve a schema based on Entity Class.
+     */
+    protected function getSchemaForEntity(): Schema
+    {
+        if ($this->entityClass instanceof Schema) {
+            return $this->entityClass;
+        }
+
+        $model = new $this->entityClass();
+
+        if ($model instanceof LegacyRecord) {
+            return $model->getSchema();
+        }
+
+        return new DynamicSchema();
     }
 }

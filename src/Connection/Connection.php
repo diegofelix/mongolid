@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Connection;
 
 use MongoDB\Client;
@@ -11,31 +12,14 @@ class Connection
     /**
      * The default database where mongolid will store the documents.
      *
-     * @var string
      */
-    public $defaultDatabase = 'mongolid';
+    public string $defaultDatabase = 'mongolid';
 
     /**
      * MongoDB Client object that represents this connection.
      *
-     * @var Client
      */
-    protected $client;
-
-    /**
-     * @var string
-     */
-    private $server;
-
-    /**
-     * @var array
-     */
-    private $options;
-
-    /**
-     * @var array
-     */
-    private $driverOptions;
+    protected Client $client;
 
     /**
      * Constructs a new Mongolid connection. It uses the same constructor
@@ -48,13 +32,10 @@ class Connection
      * @param array  $driverOptions the mongodb driver options when opening a connection
      */
     public function __construct(
-        string $server = 'mongodb://localhost:27017',
-        array $options = [],
-        array $driverOptions = []
+        private string $server = 'mongodb://localhost:27017',
+        private array $options = [],
+        private array $driverOptions = []
     ) {
-        $this->server = $server;
-        $this->options = $options;
-        $this->driverOptions = $driverOptions;
     }
 
     /**
@@ -68,7 +49,11 @@ class Connection
 
             $this->findDefaultDatabase($this->server);
 
-            $this->client = new Client($this->server, $this->options, $this->driverOptions);
+            $this->client = new Client(
+                $this->server,
+                $this->options,
+                $this->driverOptions
+            );
         }
 
         return $this->client;

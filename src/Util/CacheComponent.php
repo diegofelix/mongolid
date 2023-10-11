@@ -13,14 +13,14 @@ class CacheComponent implements CacheComponentInterface
      *
      * @var array
      */
-    protected $storage = [];
+    protected array $storage = [];
 
     /**
      * Time to live of each stored value.
      *
      * @var array
      */
-    protected $ttl = [];
+    protected array $ttl = [];
 
     /**
      * Retrieve an item from the cache by key.
@@ -39,11 +39,11 @@ class CacheComponent implements CacheComponentInterface
     /**
      * Store an item in the cache for a given number of minutes.
      *
-     * @param string $key cache key of the item
-     * @param mixed $value value being stored in cache
-     * @param float $minutes cache ttl
+     * @param string $key     cache key of the item
+     * @param mixed  $value   value being stored in cache
+     * @param float  $minutes cache ttl
      */
-    public function put(string $key, $value, float $minutes)
+    public function put(string $key, $value, float $minutes): void
     {
         $this->storage[$key] = $value;
         $this->ttl[$key] = $this->time() + 60 * $minutes;
@@ -60,7 +60,8 @@ class CacheComponent implements CacheComponentInterface
      */
     public function has(string $key): bool
     {
-        if (array_key_exists($key, $this->ttl) &&
+        if (
+            array_key_exists($key, $this->ttl) &&
             $this->time() - $this->ttl[$key] > 0
         ) {
             unset($this->ttl[$key]);
@@ -79,7 +80,7 @@ class CacheComponent implements CacheComponentInterface
      *
      * @return int return current Unix timestamp
      */
-    protected function time()
+    protected function time(): int
     {
         return time();
     }

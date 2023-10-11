@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Tests\Integration;
 
 use MongoDB\BSON\ObjectId;
@@ -51,7 +52,11 @@ final class ReferencesOneRelationTest extends IntegrationTestCase
         // changing the field with fillable
         $john->parent()->attach($bob);
         $this->assertParent($bob, $john);
-        $john = ReferencedUser::fill(['parent_id' => $chuck->_id], $john, true);
+        $john = ReferencedUser::fill(
+            ['parent_id' => $chuck->_id],
+            $john,
+            true
+        );
         $this->assertParent($chuck, $john);
     }
 
@@ -99,7 +104,11 @@ final class ReferencesOneRelationTest extends IntegrationTestCase
         // changing the field with fillable
         $john->son()->attach($bob);
         $this->assertSon($bob, $john);
-        $john = ReferencedUser::fill(['arbitrary_field' => $chuck->code], $john, true);
+        $john = ReferencedUser::fill(
+            ['arbitrary_field' => $chuck->code],
+            $john,
+            true
+        );
         $this->assertSon($chuck, $john);
     }
 
@@ -110,13 +119,15 @@ final class ReferencesOneRelationTest extends IntegrationTestCase
 
         // Expectations
         $this->expectException(NotARelationException::class);
-        $this->expectExceptionMessage('Called method "invalid" is not a Relation!');
+        $this->expectExceptionMessage(
+            'Called method "invalid" is not a Relation!'
+        );
 
         // Actions
         $user->invalid;
     }
 
-    private function createUser(string $name, string $code = null): ReferencedUser
+    private function createUser(string $name, ?string $code = null): ReferencedUser
     {
         $user = new ReferencedUser();
         $user->_id = new ObjectId();
@@ -129,7 +140,7 @@ final class ReferencesOneRelationTest extends IntegrationTestCase
         return $user;
     }
 
-    private function assertParent($expected, ReferencedUser $model)
+    private function assertParent(ReferencedUser $expected, ReferencedUser $model): void
     {
         $parent = $model->parent;
         $this->assertInstanceOf(ReferencedUser::class, $parent);
@@ -143,7 +154,7 @@ final class ReferencesOneRelationTest extends IntegrationTestCase
         $this->assertSame($expected->_id, $model->parent_id);
     }
 
-    private function assertSon($expected, ReferencedUser $model)
+    private function assertSon(ReferencedUser $expected, ReferencedUser $model): void
     {
         $son = $model->son;
         $this->assertInstanceOf(ReferencedUser::class, $son);

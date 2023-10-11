@@ -1,4 +1,5 @@
 <?php
+
 namespace Mongolid\Connection;
 
 use Illuminate\Container\Container as IlluminateContainer;
@@ -41,7 +42,7 @@ final class ManagerTest extends TestCase
         $this->setProtected($manager, 'container', $container);
 
         // Expectations
-        $expectationCallable = function ($class, $eventService) use ($test, $eventTrigger) {
+        $expectationCallable = function ($class, $eventService) use ($test, $eventTrigger): void {
             $test->assertSame(EventTriggerService::class, $class);
             $dispatcher = $this->getProtected($eventService, 'dispatcher');
             $test->assertSame($eventTrigger, $dispatcher);
@@ -49,7 +50,10 @@ final class ManagerTest extends TestCase
 
         $container
             ->expects('instance')
-            ->with(EventTriggerService::class, m::type(EventTriggerService::class))
+            ->with(
+                EventTriggerService::class,
+                m::type(EventTriggerService::class)
+            )
             ->andReturnUsing($expectationCallable);
 
         // Actions
@@ -65,7 +69,10 @@ final class ManagerTest extends TestCase
         $this->callProtected($manager, 'init');
 
         // Assertions
-        $this->assertInstanceOf(IlluminateContainer::class, $manager->container);
+        $this->assertInstanceOf(
+            IlluminateContainer::class,
+            $manager->container
+        );
 
         // Actions
         $container = $manager->container;

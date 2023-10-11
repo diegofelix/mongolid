@@ -8,7 +8,6 @@ use MongoDB\Driver\ReadPreference;
 use Mongolid\Connection\Connection;
 use Mongolid\Container\Container;
 use Mongolid\LegacyRecord;
-use Serializable;
 use Traversable;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor as DriverCursor;
@@ -27,49 +26,26 @@ class SchemaCursor implements CursorInterface
     /**
      * Schema that describes the entity that will be retrieved when iterating through the cursor.
      *
-     * @var string
      */
-    public $entitySchema;
-
-    /**
-     * @var Collection
-     */
-    protected $collection;
-
-    /**
-     * The command that is being called in the $collection.
-     *
-     * @var string
-     */
-    protected $command;
-
-    /**
-     * The parameters of the $command.
-     *
-     * @var array
-     */
-    protected $params;
+    public Schema $entitySchema;
 
     /**
      * The MongoDB cursor used to interact with db.
      *
-     * @var DriverCursor
      */
-    protected $cursor = null;
+    protected DriverCursor $cursor;
 
     /**
      * Iterator position (to be used with foreach).
      *
-     * @var int
      */
-    protected $position = 0;
+    protected int $position = 0;
 
     /**
      * Have the responsibility of assembling the data coming from the database into actual entities.
      *
-     * @var EntityAssembler
      */
-    protected $assembler;
+    protected EntityAssembler $assembler;
 
     /**
      * @param Schema     $entitySchema schema that describes the entity that will be retrieved from the database
@@ -79,15 +55,18 @@ class SchemaCursor implements CursorInterface
      */
     public function __construct(
         Schema $entitySchema,
-        Collection $collection,
-        string $command,
-        array $params
+        protected Collection $collection,
+        /**
+         * The command that is being called in the $collection.
+         */
+        protected string $command,
+        /**
+         * The parameters of the $command.
+         */
+        protected array $params
     ) {
         $this->cursor = null;
         $this->entitySchema = $entitySchema;
-        $this->collection = $collection;
-        $this->command = $command;
-        $this->params = $params;
     }
 
     /**
@@ -189,7 +168,7 @@ class SchemaCursor implements CursorInterface
     {
         try {
             $this->getCursor()->rewind();
-        } catch (LogicException $e) {
+        } catch (LogicException) {
             $this->fresh();
             $this->getCursor()->rewind();
         }
@@ -348,7 +327,10 @@ class SchemaCursor implements CursorInterface
         $connection = Container::make(Connection::class);
 
         $client = $connection->getClient();
-        $db = $client->selectDatabase($connection->defaultDatabase, ['document' => 'array']);
+        $db = $client->selectDatabase(
+            $connection->defaultDatabase,
+            ['document' => 'array']
+        );
         $collectionObject = $db->selectCollection($attributes['collection']);
 
         foreach ($attributes as $key => $value) {
